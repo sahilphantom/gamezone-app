@@ -1,6 +1,7 @@
 import React from 'react'
 import FeatureList from './FeatureList'
 import Robot3D from './Robot3D'
+import { Canvas } from '@react-three/fiber'
 
 const Hero = () => {
   return (
@@ -8,7 +9,9 @@ const Hero = () => {
     <div className="flex flex-col md:flex-row items-center justify-between">
       <div className="md:w-1/2 mb-10 md:mb-0">
         <div className="bg-gradient-to-r from-[#0a1428] to-[#1a1a2e] rounded-lg p-4">
-          <Robot3D />
+        <Canvas shadows camera={{ position: [0, 2, 5], fov: 50 }}>
+      <Robot3D/>
+    </Canvas>
         </div>
       </div>
       <div className="md:w-1/2 md:pl-12">
