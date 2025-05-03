@@ -2,10 +2,13 @@ import React from 'react'
 
 const Features = () => {
   return (
-    <div className="container border-b border-green-900/30  mx-auto px-4  md:py-14">
+    <div className="container border-b border-green-900/30  mx-auto px-4  md:py-14 max-sm:py-12">
         <div className="flex flex-col items-center justify-center text-center max-w-4xl mx-auto">
-        <div className="inline-block px-3 py-1  rounded-full bg-green-900/30 text-green-400 text-xl font-medium">
+        <div className="inline-block border border-green-900/30 px-3.5 py-1 mb-3 rounded-full bg-green-900/30 text-green-400 text-xl font-medium">
             Features
+          </div>
+          <div className="inline-block px-3 py-1 mb-3 text-gray-400 text-base max-w-3xl mx-auto font-medium ">
+          Experience competitive gaming like never before — real-time battles, global leaderboards, and exclusive rewards in one ultimate arena.
           </div>
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full">
           {[
