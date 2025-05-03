@@ -1,91 +1,215 @@
-// BlinkingRobot.jsx
-import React, { useRef, useState } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { MeshDistortMaterial, OrbitControls } from '@react-three/drei';
+import React, { useRef, useState } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { 
+  OrbitControls, 
+  Environment, 
+  RoundedBox, 
+  BakeShadows,
+  ContactShadows
+} from '@react-three/drei'
+import * as THREE from 'three'
 
-export default function Robot3D() {
-  const robotRef = useRef();
-  const leftEyeRef = useRef();
-  const rightEyeRef = useRef();
-  const [blink, setBlink] = useState(false);
-  let blinkInterval = 0;
-
-  // Blinking effect
-  useFrame((state, delta) => {
-    blinkInterval += delta;
-    if (blinkInterval > 2) {
-      setBlink((prev) => !prev);
-      blinkInterval = 0;
+function RobotModel(props) {
+  const group = useRef()
+  const [blinking, setBlinking] = useState(false)
+  
+  // Floating animation and blinking effect
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime()
+    
+    // Subtle floating animation
+    group.current.position.y = Math.sin(t / 2) / 20
+    group.current.rotation.y = Math.sin(t / 8) / 10
+    
+    // Blinking animation - blink every 3 seconds for 0.15 seconds
+    if (Math.floor(t * 10) % 30 === 0 && !blinking) {
+      setBlinking(true)
+      setTimeout(() => setBlinking(false), 150)
     }
-
-    // Movement animation
-    if (robotRef.current) {
-      robotRef.current.position.x = Math.sin(state.clock.elapsedTime) * 2;
-    }
-
-    // Blinking eyes
-    if (leftEyeRef.current && rightEyeRef.current) {
-      const scale = blink ? 0.1 : 1;
-      leftEyeRef.current.scale.y = scale;
-      rightEyeRef.current.scale.y = scale;
-    }
-  });
+  })
 
   return (
-    <>
-      <group ref={robotRef} position={[0, 0.5, 0]}>
-        {/* Body */}
-        <mesh castShadow>
-          <boxGeometry args={[2, 1, 1]} />
-          <meshStandardMaterial color="#b0c4de" metalness={0.6} roughness={0.2} />
-        </mesh>
+    <group ref={group} {...props} dispose={null}>
+      {/* Main body - single cube with rounded corners */}
+      <RoundedBox 
+        args={[2.2, 2.2, 2.2]} 
+        radius={0.4} 
+        smoothness={10} 
+        position={[0, 0, 0]}
+        castShadow
+        receiveShadow
+      >
+        <meshPhysicalMaterial 
+          color="#2a2a4a" 
+          metalness={0.9} 
+          roughness={0.2}
+          clearcoat={1}
+          clearcoatRoughness={0.1}
+          reflectivity={1}
+        />
+      </RoundedBox>
 
-        {/* Head */}
-        <mesh position={[0, 0.75, 0]}>
-          <boxGeometry args={[2, 1, 1]} />
-          <meshStandardMaterial color="#b0c4de" metalness={0.6} roughness={0.2} />
-        </mesh>
+      {/* Face panel (slightly indented) */}
+      <RoundedBox 
+        args={[1.8, 1.2, 0.1]} 
+        radius={0.2} 
+        smoothness={10} 
+        position={[0, 0, 1.05]}
+        castShadow
+      >
+        <meshPhysicalMaterial 
+          color="#1a1a2e" 
+          metalness={0.7} 
+          roughness={0.2}
+          clearcoat={0.5}
+        />
+      </RoundedBox>
 
-        {/* Eyes */}
-        <mesh ref={leftEyeRef} position={[-0.4, 0.75, 0.51]}>
-          <boxGeometry args={[0.2, 0.2, 0.05]} />
-          <meshStandardMaterial emissive="#ff00ff" emissiveIntensity={2} color="#000000" />
-        </mesh>
-
-        <mesh ref={rightEyeRef} position={[0.4, 0.75, 0.51]}>
-          <boxGeometry args={[0.2, 0.2, 0.05]} />
-          <meshStandardMaterial emissive="#ff00ff" emissiveIntensity={2} color="#000000" />
-        </mesh>
-
-        {/* Antennas */}
-        <mesh position={[-0.5, 1.3, 0]} rotation={[0.5, 0, 0]}>
-          <cylinderGeometry args={[0.05, 0.05, 0.5, 32]} />
-          <meshStandardMaterial color="#d3d3d3" />
-        </mesh>
-
-        <mesh position={[0.5, 1.3, 0]} rotation={[0.5, 0, 0]}>
-          <cylinderGeometry args={[0.05, 0.05, 0.5, 32]} />
-          <meshStandardMaterial color="#d3d3d3" />
-        </mesh>
-
-        {/* Legs */}
-        {[[-0.7, -0.5, 0.3], [0.7, -0.5, 0.3], [-0.7, -0.5, -0.3], [0.7, -0.5, -0.3]].map((pos, i) => (
-          <mesh key={i} position={pos}>
-            <cylinderGeometry args={[0.15, 0.15, 0.2, 32]} />
-            <meshStandardMaterial color="#444" />
-          </mesh>
+      {/* Eyes - semi-circular glowing pink */}
+      <group position={[0, 0, 1.1]}>
+        {[-0.4, 0.4].map((x, i) => (
+          <React.Fragment key={i}>
+            {/* Eye shape - half cylinder */}
+            <mesh position={[x, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.25, 0.25, 0.1, 32, 1, false, 0, Math.PI]} />
+              <meshBasicMaterial 
+                color="#FF3D81" 
+                toneMapped={false}
+                opacity={blinking ? 0.1 : 1}
+                transparent={true}
+              />
+            </mesh>
+            
+            {/* Brighter inner part */}
+            <mesh position={[x, 0, 0.01]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.15, 0.15, 0.1, 32, 1, false, 0, Math.PI]} />
+              <meshBasicMaterial 
+                color="#ffffff" 
+                toneMapped={false}
+                opacity={blinking ? 0.1 : 1}
+                transparent={true}
+              />
+            </mesh>
+            
+            {/* Point light for each eye to create glow effect */}
+            <pointLight 
+              position={[x, 0, 0.2]} 
+              color="#FF3D81" 
+              intensity={blinking ? 0.1 : 2} 
+              distance={4}
+            />
+          </React.Fragment>
         ))}
       </group>
 
-      {/* Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, 0]} receiveShadow>
-        <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#111" />
-      </mesh>
+      {/* Small bumps on corners and edges */}
+      {[
+        // Top corners
+        [-1, 1, -1],
+        [1, 1, -1],
+        [-1, 1, 1],
+        [1, 1, 1],
+        // Bottom corners
+        [-1, -1, -1],
+        [1, -1, -1],
+        [-1, -1, 1],
+        [1, -1, 1],
+        // Middle edges
+        [0, 1, -1],
+        [0, -1, -1],
+        [0, 1, 1],
+        [0, -1, 1],
+        [-1, 0, -1],
+        [1, 0, -1],
+        [-1, 0, 1],
+        [1, 0, 1],
+        [-1, 1, 0],
+        [1, 1, 0],
+        [-1, -1, 0],
+        [1, -1, 0]
+      ].map((pos, i) => (
+        <mesh key={i} position={[pos[0] * 1.1, pos[1] * 1.1, pos[2] * 1.1]} castShadow>
+          <sphereGeometry args={[0.08, 16, 16]} />
+          <meshStandardMaterial color="#1a1a2e" metalness={0.9} roughness={0.2} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
 
-      <ambientLight intensity={0.3} />
-      <pointLight position={[5, 5, 5]} intensity={1.5} castShadow />
-      <OrbitControls />
-    </>
-  );
+export default function Robot3D() {
+  return (
+    <div className="w-full h-full">
+      <Canvas 
+        shadows 
+        camera={{ position: [0, 0, 5], fov: 40 }}
+        gl={{ 
+          preserveDrawingBuffer: true,
+          alpha: true,  // Enable transparency
+          antialias: true
+        }}
+      >
+        <color attach="background" args={[0, 0, 0, 0]} /> {/* Transparent background */}
+        
+        {/* Ambient light for base illumination */}
+        <ambientLight intensity={0.2} />
+        
+        {/* Main key light */}
+        <spotLight
+          position={[5, 5, 5]}
+          angle={0.25}
+          penumbra={1}
+          intensity={1}
+          castShadow
+          shadow-mapSize={[1024, 1024]}
+        />
+        
+        {/* Fill light */}
+        <spotLight
+          position={[-5, 5, 5]}
+          angle={0.3}
+          penumbra={1}
+          intensity={0.5}
+          castShadow={false}
+        />
+        
+        {/* Pink accent light for dramatic effect */}
+        <pointLight 
+          position={[0, 0, 3]} 
+          color="#FF3D81" 
+          intensity={0.5} 
+          distance={6}
+        />
+        
+        <RobotModel position={[0, 0, 0]} />
+        
+        {/* Environment for reflections */}
+        <Environment preset="studio" />
+        
+        {/* Contact shadows for grounding */}
+        <ContactShadows
+          position={[0, -1.5, 0]}
+          opacity={0.6}
+          scale={5}
+          blur={2}
+          far={4}
+          resolution={256}
+          color="#000000"
+        />
+        
+        {/* Camera controls */}
+        <OrbitControls 
+          enablePan={false} 
+          enableZoom={false}
+          autoRotate
+          autoRotateSpeed={1}
+          minPolarAngle={Math.PI / 4} 
+          maxPolarAngle={Math.PI / 2.2}
+        />
+        
+        {/* Bake shadows for performance */}
+        <BakeShadows />
+      </Canvas>
+    </div>
+  )
 }

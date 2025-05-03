@@ -1,37 +1,81 @@
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
+import { Menu, Search, X } from 'lucide-react'
 
 const Header = () => {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [searchActive, setSearchActive] = useState(false)
+  const searchInputRef = useRef(null)
+  
+  // Focus search input when activated
+  useEffect(() => {
+    if (searchActive && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [searchActive])
   return (
-    <header className="container mx-auto px-4 py-6 flex justify-between items-center">
-      <div className="flex items-center">
-        <div className="mr-12">
-          <svg width="140" height="40" viewBox="0 0 140 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8">
-            <path d="M101 12.5H115.5V17.5H106.5V22.5H114V27.5H106.5V37.5H101V12.5Z" fill="white"/>
-            <path d="M118 12.5H123.5V37.5H118V12.5Z" fill="white"/>
-            <path d="M126 12.5H131.5V32.5H140V37.5H126V12.5Z" fill="white"/>
-            <path d="M0 12.5H5.5V37.5H0V12.5Z" fill="#FF3D81"/>
-            <path d="M8 12.5H13.5V37.5H8V12.5Z" fill="#FF3D81"/>
-            <path d="M16 12.5H21.5V37.5H16V12.5Z" fill="#FF3D81"/>
-            <path d="M32 12.5H37.5V37.5H32V12.5Z" fill="white"/>
-            <path d="M40 12.5H45.5V37.5H40V12.5Z" fill="white"/>
-            <path d="M56 12.5H61.5V37.5H56V12.5Z" fill="white"/>
-            <path d="M24 12.5H29.5V37.5H24V12.5Z" fill="#FF3D81"/>
-            <path d="M48 12.5H53.5V37.5H48V12.5Z" fill="white"/>
-            <path d="M64 12.5H69.5V37.5H64V12.5Z" fill="white"/>
-            <path d="M72 12.5H77.5V37.5H72V12.5Z" fill="white"/>
-            <path d="M80 12.5H85.5V37.5H80V12.5Z" fill="white"/>
-            <path d="M88 12.5H93.5V37.5H88V12.5Z" fill="white"/>
-          </svg>
+    <header className="sticky top-0 z-50 w-full border-b border-green-900/30 bg-black/80 backdrop-blur-sm">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        {/* Left side - Hamburger Menu */}
+        <div className="relative">
+          <button 
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-2 rounded-full hover:bg-green-900/20 transition-colors"
+            aria-label="Menu"
+          >
+            <Menu className="h-6 w-6 text-green-500" />
+          </button>
+          
+          {/* Dropdown Menu */}
+          {menuOpen && (
+            <div className="absolute top-full left-0 mt-2 w-56 rounded-md bg-black border border-green-900/50 shadow-lg shadow-green-900/20 overflow-hidden">
+              <div className="py-1">
+                <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-green-900/20 hover:text-green-400">Home</a>
+                <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-green-900/20 hover:text-green-400">Technology</a>
+                <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-green-900/20 hover:text-green-400">About</a>
+                <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-green-900/20 hover:text-green-400">Features</a>
+                <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-green-900/20 hover:text-green-400">Contact</a>
+              </div>
+            </div>
+          )}
         </div>
-        <nav className="hidden md:flex space-x-8">
-          <a href="#" className="text-white hover:text-gray-300">Home</a>
-          <a href="#" className="text-white hover:text-gray-300">Technology</a>
-          <a href="#" className="bg-[#1e293b] px-6 py-2 rounded-full text-white hover:bg-[#2a3a50] transition">About</a>
-        </nav>
-      </div>
-      <div className="flex space-x-4">
-        <button className="bg-white text-black px-6 py-2 rounded-full hover:bg-gray-200 transition">Learn more</button>
-        <button className="bg-[#2a3a50] text-white px-6 py-2 rounded-full hover:bg-[#3a4a60] transition">Join us</button>
+        
+        {/* Center - Animated Search Bar */}
+        <div className="flex-1 max-w-md mx-4">
+          <div className={`relative flex items-center transition-all duration-300 ${searchActive ? 'w-full' : 'w-[200px] mx-auto'}`}>
+            <div className={`absolute inset-0 bg-green-900/20 rounded-full transition-all duration-300 ${searchActive ? 'opacity-100' : 'opacity-0'}`}></div>
+            <div className="relative w-full flex items-center">
+              <button 
+                onClick={() => setSearchActive(!searchActive)}
+                className="absolute left-2 p-1 rounded-full hover:bg-green-900/20 transition-colors z-10"
+                aria-label={searchActive ? "Close search" : "Open search"}
+              >
+                {searchActive ? (
+                  <X className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Search className="h-4 w-4 text-green-500" />
+                )}
+              </button>
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search..."
+                className={`w-full bg-transparent border border-green-900/30 rounded-full py-2 pl-10 pr-4 text-white placeholder-green-700 focus:outline-none focus:ring-1 focus:ring-green-500 transition-all duration-300 ${searchActive ? 'opacity-100' : 'opacity-70'}`}
+                onFocus={() => setSearchActive(true)}
+                onBlur={() => setSearchActive(false)}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Right side - Login/Signup Buttons */}
+        <div className="flex items-center space-x-3">
+          <button className="px-4 py-2 text-sm text-white hover:text-green-400 transition-colors">
+            Login
+          </button>
+          <button className="px-4 py-2 text-sm bg-green-600 hover:bg-green-500 text-white rounded-md transition-colors">
+            Sign Up
+          </button>
+        </div>
       </div>
     </header>
   )
